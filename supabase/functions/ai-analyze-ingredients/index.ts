@@ -163,7 +163,31 @@ Be conservative with safety ratings - when in doubt, use "caution" rather than "
     // Parse the AI response
     let analysisResult: Partial<AIBatchAnalysis>
     try {
-      const aiContent = JSON.parse(openaiData.choices[0].message.content)
+      const messageContent = openaiData.choices[0]?.message?.content
+      
+      if (!messageContent) {
+        throw new Error('No content in OpenAI response')
+      }
+      
+      console.log('Raw OpenAI response content:', messageContent)
+      
+      // Clean the response content before parsing
+      let cleanContent = messageContent.trim()
+      
+      // Remove any markdown code blocks if present
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      const aiContent = JSON.parse(cleanContent)
+      
+      // Validate the structure
+      if (!aiContent.ingredients || !Array.isArray(aiContent.ingredients)) {
+        throw new Error('Invalid response structure: missing ingredients array')
+      }
+      
       analysisResult = {
         ingredients: aiContent.ingredients || [],
         overallAssessment: aiContent.overallAssessment || 'Analysis completed',
@@ -173,7 +197,25 @@ Be conservative with safety ratings - when in doubt, use "caution" rather than "
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError)
-      throw new Error('Invalid AI response format')
+      console.error('Raw response content:', openaiData.choices[0]?.message?.content)
+      
+      // Return a fallback response instead of throwing an error
+      analysisResult = {
+        ingredients: ingredients.map(ingredient => ({
+          ingredient,
+          category: 'unknown',
+          safetyRating: 'caution' as const,
+          confidence: 50,
+          reasoning: `Analysis temporarily unavailable for ${ingredient}. Please try again later.`,
+          healthImpacts: ['Analysis pending'],
+          alternatives: [],
+          sources: ['Fallback analysis']
+        })),
+        overallAssessment: 'AI analysis temporarily unavailable. Using fallback analysis.',
+        keyFindings: ['AI service temporarily unavailable'],
+        recommendations: ['Please try scanning again in a few moments'],
+        processingTime: Date.now() - startTime
+      }
     }
 
     // Validate that we have analysis for all ingredients
