@@ -1,3 +1,5 @@
+![FoodScan AI App Banner](./path-to-image/banner.png)
+
 FoodScan AI App
 # Food Ingredient Safety Scanner
 
