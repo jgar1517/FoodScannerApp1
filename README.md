@@ -1,5 +1,5 @@
 <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/90ec94c7-f4a9-40c0-bfe6-b8c33e82e6d4" />
-![FoodScan AI App Banner](./path-to-image/banner.png)
+
 
 FoodScan AI App
 # Food Ingredient Safety Scanner
